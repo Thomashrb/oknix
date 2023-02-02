@@ -1,0 +1,10 @@
+---
+BasedOnStyle: Google
+AccessModifierOffset: -4
+AlignConsecutiveDeclarations: 'true'
+AlignConsecutiveAssignments: 'true'
+ColumnLimit: 160
+BreakBeforeBraces: Allman
+AllowShortIfStatementsOnASingleLine: false
+...
+

@@ -1,0 +1,8 @@
+build
+debug
+
+cmake
+!cmake/CPM.cmake
+
+.cache
+compile_commands.json
