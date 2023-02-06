@@ -1,26 +1,56 @@
+#include <strings.h>
+
 #include <iostream>
-#include <string>
 #include <variant>
 
 #include "json.hpp"
 #include "validator.hpp"
 
+void printHelp()
+{
+  std::cout << "oknix is a command line tool and server for validating ONIX metadata\n";
+  std::cout << "\n";
+  std::cout << "Usage:\n";
+  std::cout << "  oknix --help\n";
+  std::cout << "  oknix --file [filepath]\n";
+  std::cout << "  oknix --server --host localhost --port 8016\n";
+}
+
 int main(int argc, char **argv)
 {
-  const std::string     onixpath = "Onix3sample_refnames.xml";  // TODO
-  const std::variant<Err, Ok> r        = xmlValidate(onixpath, SCHEMA_PATH);
+  if (argc < 2 || strcasecmp(argv[1], "--help") == 0)
+  {
+    printHelp();
+    return EXIT_SUCCESS;
+  }
 
-  if constexpr (std::is_same_v<std::decay_t<decltype(r)>, Err>)
+  if (strcasecmp(argv[1], "--file") == 0)
   {
-    Err         e       = std::get<Err>(r);
-    std::string jstring = jsonEncode(e);
-    std::cout << jstring + "\n";
+    const std::variant<Err, Ok> r = xmlValidate(argv[2], SCHEMA_PATH);
+
+    if (std::holds_alternative<Err>(r))
+    {
+      Err         e       = std::get<Err>(r);
+      std::string jstring = jsonEncode(e);
+      std::cout << jstring + "\n";
+    }
+    if (std::holds_alternative<Ok>(r))
+    {
+      Ok          ok      = std::get<Ok>(r);
+      std::string jstring = jsonEncode(ok);
+      std::cout << jstring + "\n";
+    }
+
+    return EXIT_SUCCESS;
   }
-  if constexpr (std::is_same_v<std::decay_t<decltype(r)>, Ok>)
+
+  if (strcasecmp(argv[1], "--server") == 0)
   {
-    Ok          ok      = std::get<Ok>(r);
-    std::string jstring = jsonEncode(ok);
-    std::cout << jstring + "\n";
+    std::cout << "TODO do the server thing";
+    return EXIT_SUCCESS;
   }
-  return 0;
+
+  std::cout << "Command not recognized \n\n";
+  printHelp();
+  return EXIT_FAILURE;
 }

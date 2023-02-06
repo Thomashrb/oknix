@@ -8,11 +8,8 @@
 #include <string>
 #include <variant>
 
-static void parseErrorHandler(void *arg, xmlErrorPtr xmlErr)
-{
-  std::fprintf(stderr, "ERROR line %d, column %d\n%s", xmlErr->line, xmlErr->int2, xmlErr->message);
-  *((bool *)arg) = true;
-}
+
+static void parseErrorHandler(void *arg, xmlErrorPtr xmlErr [[maybe_unused]]) { *((bool *)arg) = true; }
 
 const std::variant<Err, Ok> xmlValidate(const std::string onixpath, const std::string schemapath)
 {
@@ -25,17 +22,15 @@ const std::variant<Err, Ok> xmlValidate(const std::string onixpath, const std::s
   int  is_err = 0;
   xmlSchemaSetValidStructuredErrors(vctxt, parseErrorHandler, &is_err);
   xmlTextReaderSchemaValidateCtxt(reader, vctxt, 0);
-  int ret = xmlTextReaderRead(reader);
+  int                   iter = xmlTextReaderRead(reader);
+  std::variant<Err, Ok> ret;
 
-  while (ret == 1 && !is_err)
+  while (iter == 1 && !is_err)
   {
-    ret = xmlTextReaderRead(reader);
+    iter = xmlTextReaderRead(reader);
   }
 
-  xmlFreeTextReader(reader);
-  xmlCleanupParser();
-
-  if (ret != 0)
+  if (iter != 0)
   {
     xmlErrorPtr xmlErr = xmlGetLastError();
 
@@ -45,10 +40,15 @@ const std::variant<Err, Ok> xmlValidate(const std::string onixpath, const std::s
     err.code = xmlErr->code;
     err.file = xmlErr->file;
     err.msg  = xmlErr->message;
-    return err;
+
+    ret = err;
   }
   else
   {
-    return Ok{};
+    ret = Ok{};
   }
+
+  xmlFreeTextReader(reader);
+  xmlCleanupParser();
+  return ret;
 }
